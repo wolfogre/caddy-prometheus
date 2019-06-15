@@ -52,6 +52,18 @@ func TestParse(t *testing.T) {
 			label version 1.2
 			label route_name {<X-Route-Name}
 		}`, false, &Metrics{addr: defaultAddr, path: defaultPath, extraLabels: []extraLabel{extraLabel{"version", "1.2"}, extraLabel{"route_name", "{<X-Route-Name}"}}}},
+		{`prometheus {
+			latency_buckets
+		}`, true, nil},
+		{`prometheus {
+			latency_buckets 0.1 2 5 10
+		}`, false, &Metrics{addr: defaultAddr, path: defaultPath, extraLabels: []extraLabel{}, latencyBuckets: []float64{0.1, 2, 5, 10}}},
+		{`prometheus {
+			size_buckets
+		}`, true, nil},
+		{`prometheus {
+			size_buckets 1 5 10 50 100 1e3 10e6
+		}`, false, &Metrics{addr: defaultAddr, path: defaultPath, extraLabels: []extraLabel{}, sizeBuckets: []float64{1, 5, 10, 50, 100, 1e3, 10e6}}},
 	}
 	for i, test := range tests {
 		c := caddy.NewTestController("http", test.input)
