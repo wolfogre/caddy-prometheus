@@ -48,14 +48,6 @@ func (m *Metrics) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error)
 		stat = rw.Status()
 	}
 
-	fam := "1"
-	if isIPv6(r.RemoteAddr) {
-		fam = "2"
-	}
-
-	proto := strconv.Itoa(r.ProtoMajor)
-	proto = proto + "." + strconv.Itoa(r.ProtoMinor)
-
 	statusStr := strconv.Itoa(stat)
 
 	replacer := httpserver.NewReplacer(r, rw, "")
@@ -65,11 +57,11 @@ func (m *Metrics) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error)
 		extraLabelValues = append(extraLabelValues, replacer.Replace(label.value))
 	}
 
-	requestCount.WithLabelValues(append([]string{hostname, fam, proto}, extraLabelValues...)...).Inc()
-	requestDuration.WithLabelValues(append([]string{hostname, fam, proto}, extraLabelValues...)...).Observe(time.Since(start).Seconds())
-	responseSize.WithLabelValues(append([]string{hostname, fam, proto, statusStr}, extraLabelValues...)...).Observe(float64(rw.Size()))
-	responseStatus.WithLabelValues(append([]string{hostname, fam, proto, statusStr}, extraLabelValues...)...).Inc()
-	responseLatency.WithLabelValues(append([]string{hostname, fam, proto, statusStr}, extraLabelValues...)...).Observe(tw.firstWrite.Sub(start).Seconds())
+	requestCount.WithLabelValues(append([]string{hostname}, extraLabelValues...)...).Inc()
+	requestDuration.WithLabelValues(append([]string{hostname}, extraLabelValues...)...).Observe(time.Since(start).Seconds())
+	responseSize.WithLabelValues(append([]string{hostname, statusStr}, extraLabelValues...)...).Observe(float64(rw.Size()))
+	responseStatus.WithLabelValues(append([]string{hostname, statusStr}, extraLabelValues...)...).Inc()
+	responseLatency.WithLabelValues(append([]string{hostname, statusStr}, extraLabelValues...)...).Observe(tw.firstWrite.Sub(start).Seconds())
 
 	return status, err
 }
